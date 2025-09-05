@@ -5,7 +5,7 @@ class TimelineConfig {
         this.config = {
             // 数据源配置
             dataSources: [
-                'timeline-data.yaml'
+                'https://raw.githubusercontent.com/BytePioneer-AI/LLM-Timeline/main/timeline-data.yaml'
             ],
             
             // 布局配置
@@ -93,7 +93,7 @@ const TIMELINE_CONFIGS = {
     // 独立HTML版本配置
     standalone: {
         dataSources: [
-            'timeline-data.yaml'
+            'https://raw.githubusercontent.com/BytePioneer-AI/LLM-Timeline/main/timeline-data.yaml'
         ],
         layout: {
             showTocToggle: true,
@@ -157,7 +157,7 @@ const TIMELINE_CONFIGS = {
     // 简化版本配置
     simple: {
         dataSources: [
-            'timeline-data.yaml'
+            'https://raw.githubusercontent.com/BytePioneer-AI/LLM-Timeline/main/timeline-data.yaml'
         ],
         layout: {
             showTocToggle: false,
