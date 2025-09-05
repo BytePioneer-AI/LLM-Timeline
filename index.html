@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大模型发布时间轴</title>
+    <link rel="stylesheet" href="./assets/timeline-core.css">
+    <style>
+        /* 目录切换按钮样式 */
+        #toggleToc {
+            background: #5698c3;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 1200px) {
+            #toggleToc {
+                display: none; /* 在小屏幕上隐藏切换按钮 */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div style="position: fixed; top: 20px; left: 20px; z-index: 1001;">
+        <button id="toggleToc">📋 目录</button>
+    </div>
+    <h1 style="text-align: center; color: #5698c3; margin: 2rem 0;">大模型发布时间轴</h1>
+
+    <div class="release-chart-wrapper">
+        <div class="control-bar">
+            <input id="timeline-search" class="search-input" type="text" placeholder="搜索模型" />
+            <div id="size-select-custom" class="size-select-custom" title="参数量"></div>
+            <div class="type-filter" id="type-filter">
+                <!-- 类型筛选芯片由JS生成 -->
+            </div>
+        </div>
+        <div class="release-chart" id="release-chart">
+            <div class="tooltip" id="release-chart-tooltip"></div>
+        </div>
+    </div>
+
+    <div class="custom-toc" id="custom-toc">
+        <div class="custom-toc-header">
+            <h3>时间轴导航</h3>
+        </div>
+        <div class="custom-toc-content">
+            <ul id="toc-list">
+                <!-- 目录项将由 JavaScript 生成 -->
+            </ul>
+        </div>
+    </div>
+
+    <div class="timeline-container" id="timeline">
+        <!-- 时间轴内容将由 JavaScript 生成 -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="./assets/timeline-config.js"></script>
+    <script src="./assets/timeline-core.js"></script>
+    <script>
+        // 全局时间轴实例
+        let timelineCore;
+
+        // 初始化时间轴
+        function initTimeline() {
+            // 创建配置
+            const config = new TimelineConfig(TIMELINE_CONFIGS.standalone);
+            
+            // 创建时间轴实例
+            timelineCore = new TimelineCore(config);
+            
+            // 暴露给全局作用域（用于按钮事件）
+            window.timelineCore = timelineCore;
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            initTimeline();
+        });
+    </script>
+</body>
+
+</html>
