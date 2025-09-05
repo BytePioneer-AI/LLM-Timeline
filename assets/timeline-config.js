@@ -3,9 +3,10 @@ class TimelineConfig {
     constructor(options = {}) {
         // 默认配置
         this.config = {
-            // 数据源配置
+            // 数据源配置 - 使用GitHub在线数据源
             dataSources: [
-                './timeline-data.json'
+                'https://raw.githubusercontent.com/BytePioneer-AI/LLM-Timeline/main/timeline-data.json',
+                './timeline-data.json' // 本地备份数据源
             ],
             
             // 布局配置
@@ -50,10 +51,12 @@ class TimelineConfig {
         const result = { ...target };
         
         for (const key in source) {
-            if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-                result[key] = this.deepMerge(target[key] || {}, source[key]);
-            } else {
-                result[key] = source[key];
+            if (source.hasOwnProperty(key)) {
+                if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+                    result[key] = this.deepMerge(target[key] || {}, source[key]);
+                } else {
+                    result[key] = source[key];
+                }
             }
         }
         
@@ -61,7 +64,18 @@ class TimelineConfig {
     }
     
     get(path) {
-        return path.split('.').reduce((obj, key) => obj?.[key], this.config);
+        const keys = path.split('.');
+        let current = this.config;
+        
+        for (const key of keys) {
+            if (current && typeof current === 'object' && key in current) {
+                current = current[key];
+            } else {
+                return undefined;
+            }
+        }
+        
+        return current;
     }
     
     set(path, value) {
@@ -80,13 +94,14 @@ const TIMELINE_CONFIGS = {
     // 独立HTML版本配置
     standalone: {
         dataSources: [
-            './timeline-data.json',
-            'https://raw.githubusercontent.com/BytePioneer-AI/LifeNotes/main/llm-timeline/timeline-data.json'
+            'https://raw.githubusercontent.com/BytePioneer-AI/LLM-Timeline/main/timeline-data.json',
+            './timeline-data.json'
         ],
         layout: {
             showTocToggle: true,
             tocVisible: true,
-            leftMargin: 290
+            leftMargin: 290,
+            enableTocAutoHide: true
         },
         styles: {
             customCSS: `
@@ -131,91 +146,26 @@ const TIMELINE_CONFIGS = {
                     }
                 }
             `
+        },
+        features: {
+            enableSearch: true,
+            enableTypeFilter: true,
+            enableSizeFilter: true,
+            enableChart: true,
+            enableMarkdown: true
         }
     },
     
-    // Hexo版本配置
-    hexo: {
+    // 简化版本配置
+    simple: {
         dataSources: [
+            'https://raw.githubusercontent.com/BytePioneer-AI/LLM-Timeline/main/timeline-data.json',
             './timeline-data.json'
         ],
         layout: {
             showTocToggle: false,
             tocVisible: true,
-            leftMargin: 0
-        },
-        styles: {
-            customCSS: `
-                /* Hexo主题适配样式 */
-                .l_right {
-                    display: none !important;
-                }
-
-                .l_body {
-                    display: grid !important;
-                    grid-template-columns: auto 1fr !important;
-                }
-
-                .l_center {
-                    width: 100% !important;
-                    max-width: none !important;
-                }
-                
-                /* Hexo版本目录保持透明背景 */
-                .custom-toc {
-                    background: transparent;
-                }
-            `
-        }
-    }
-};
-
-// 导出配置
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { TimelineConfig, TIMELINE_CONFIGS };
-} else {
-    window.TimelineConfig = TimelineConfig;
-    window.TIMELINE_CONFIGS = TIMELINE_CONFIGS;
-} 
-   deepMerge(target, source) {
-        const result = { ...target };
-        
-        for (const key in source) {
-            if (source.hasOwnProperty(key)) {
-                if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
-                    result[key] = this.deepMerge(target[key] || {}, source[key]);
-                } else {
-                    result[key] = source[key];
-                }
-            }
-        }
-        
-        return result;
-    }
-    
-    get(path) {
-        const keys = path.split('.');
-        let current = this.config;
-        
-        for (const key of keys) {
-            if (current && typeof current === 'object' && key in current) {
-                current = current[key];
-            } else {
-                return undefined;
-            }
-        }
-        
-        return current;
-    }
-}
-
-// 预定义配置
-const TIMELINE_CONFIGS = {
-    standalone: {
-        layout: {
-            showTocToggle: true,
-            tocVisible: true,
-            leftMargin: 300,
+            leftMargin: 0,
             enableTocAutoHide: true
         },
         features: {
@@ -227,3 +177,11 @@ const TIMELINE_CONFIGS = {
         }
     }
 };
+
+// 导出配置
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { TimelineConfig, TIMELINE_CONFIGS };
+} else {
+    window.TimelineConfig = TimelineConfig;
+    window.TIMELINE_CONFIGS = TIMELINE_CONFIGS;
+}

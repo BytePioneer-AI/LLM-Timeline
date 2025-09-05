@@ -4,7 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大模型发布时间轴</title>
+    <title>大模型发布时间轴 | AI Model Timeline - 实时追踪全球AI大模型发布动态</title>
+    <meta name="description" content="实时追踪全球重要AI大模型发布信息，包括GPT、Claude、Qwen、GLM等主流模型的详细评测和分析。">
+    <meta name="keywords" content="大模型,AI,人工智能,GPT,Claude,Qwen,GLM,模型评测,时间轴">
+    <meta name="author" content="AI Model Timeline">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://your-username.github.io/ai-model-timeline/">
+    <meta property="og:title" content="大模型发布时间轴 | AI Model Timeline">
+    <meta property="og:description" content="实时追踪全球重要AI大模型发布信息，专业评测分析">
+    <meta property="og:image" content="https://your-username.github.io/ai-model-timeline/assets/preview.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://your-username.github.io/ai-model-timeline/">
+    <meta property="twitter:title" content="大模型发布时间轴 | AI Model Timeline">
+    <meta property="twitter:description" content="实时追踪全球重要AI大模型发布信息，专业评测分析">
+    <meta property="twitter:image" content="https://your-username.github.io/ai-model-timeline/assets/preview.png">
+
     <link rel="stylesheet" href="./assets/timeline-core.css">
     <style>
         /* 目录切换按钮样式 */
@@ -17,12 +35,14 @@
             cursor: pointer;
             font-size: 14px;
         }
-        
+
         @media (max-width: 1200px) {
             #toggleToc {
-                display: none; /* 在小屏幕上隐藏切换按钮 */
+                display: none;
+                /* 在小屏幕上隐藏切换按钮 */
             }
         }
+    </style>
     </style>
 </head>
 
@@ -71,10 +91,10 @@
         function initTimeline() {
             // 创建配置
             const config = new TimelineConfig(TIMELINE_CONFIGS.standalone);
-            
+
             // 创建时间轴实例
             timelineCore = new TimelineCore(config);
-            
+
             // 暴露给全局作用域（用于按钮事件）
             window.timelineCore = timelineCore;
         }
