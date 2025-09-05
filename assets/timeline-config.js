@@ -3,10 +3,9 @@ class TimelineConfig {
     constructor(options = {}) {
         // 默认配置
         this.config = {
-            // 数据源配置 - 使用GitHub在线数据源
+            // 数据源配置
             dataSources: [
-                'https://raw.githubusercontent.com/BytePioneer-AI/LLM-Timeline/main/timeline-data.json',
-                './timeline-data.json' // 本地备份数据源
+                'https://raw.githubusercontent.com/BytePioneer-AI/LLM-Timeline/main/timeline-data.json'
             ],
             
             // 布局配置
@@ -94,8 +93,7 @@ const TIMELINE_CONFIGS = {
     // 独立HTML版本配置
     standalone: {
         dataSources: [
-            'https://raw.githubusercontent.com/BytePioneer-AI/LLM-Timeline/main/timeline-data.json',
-            './timeline-data.json'
+            'https://raw.githubusercontent.com/BytePioneer-AI/LLM-Timeline/main/timeline-data.json'
         ],
         layout: {
             showTocToggle: true,
@@ -159,8 +157,7 @@ const TIMELINE_CONFIGS = {
     // 简化版本配置
     simple: {
         dataSources: [
-            'https://raw.githubusercontent.com/BytePioneer-AI/LLM-Timeline/main/timeline-data.json',
-            './timeline-data.json'
+            'https://raw.githubusercontent.com/BytePioneer-AI/LLM-Timeline/main/timeline-data.json'
         ],
         layout: {
             showTocToggle: false,
