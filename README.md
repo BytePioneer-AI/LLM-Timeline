@@ -8,29 +8,32 @@
 
 ## 📊 数据源
 
-- **数据源**: [BytePioneer-AI/LLM-Timeline](https://github.com/BytePioneer-AI/LLM-Timeline/blob/main/timeline-data.json)
+- **数据源**: [BytePioneer-AI/LLM-Timeline](https://github.com/BytePioneer-AI/LLM-Timeline/blob/main/timeline-data.yaml)
 
 ## 🤝 贡献
 
 欢迎提交新模型信息或改进建议！
 
 **如何贡献：**
-1. 在 [timeline-data.json](https://github.com/BytePioneer-AI/LLM-Timeline/blob/main/timeline-data.json) 中添加新模型信息
+1. 在 [timeline-data.yaml](https://github.com/BytePioneer-AI/LLM-Timeline/blob/main/timeline-data.yaml) 中添加新模型信息
 2. 提交 Pull Request
 
 **完整示例：**
-```json
-{
-    "date": "2025-09-05",
-    "title": "⭐智谱 GLM-4.5V",
-    "text": "**摘要：** 智谱AI发布的旗舰级开源多模态模型...\n\n**模型规格与架构：**\n- **参数量：** 106B总参数，12B激活参数\n- **架构/范式：** 采用MoE架构...",
-    "modelSize": "106B (激活 12B)",
-    "modelType": "多模态",
-    "openSource": true,
-    "contextWindow": "128K",
-    "officialDoc": "https://github.com/zai-org/GLM-V",
-    "evaluation": "曾经的国产之光，智谱好像回来了。"
-}
+```yaml
+- date: "2025-09-05"
+  title: "⭐智谱 GLM-4.5V"
+  text: |
+    **摘要：** 智谱AI发布的旗舰级开源多模态模型...
+    
+    **模型规格与架构：**
+    - **参数量：** 106B总参数，12B激活参数
+    - **架构/范式：** 采用MoE架构...
+  modelSize: "106B (激活 12B)"
+  modelType: "多模态"
+  openSource: true
+  contextWindow: "128K"
+  officialDoc: "https://github.com/zai-org/GLM-V"
+  evaluation: "曾经的国产之光，智谱好像回来了。"
 ```
 
 **模型信息格式：**

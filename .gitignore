@@ -23,6 +23,7 @@ $RECYCLE.BIN/
 *.temp
 *.log
 *.cache
+.kiro
 
 # Node.js (如果使用npm/yarn)
 node_modules/

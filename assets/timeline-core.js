@@ -26,7 +26,9 @@ class TimelineCore {
     
     async init() {
         try {
+            this.showLoadingIndicator();
             await this.loadTimelineData();
+            this.hideLoadingIndicator();
             this.setupUI();
             this.bindEvents();
             console.log('时间轴初始化成功');
@@ -46,7 +48,19 @@ class TimelineCore {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                this.timelineData = await response.json();
+                
+                // 检查数据源是否为YAML格式
+                const isYamlSource = dataSources[i].endsWith('.yaml') || dataSources[i].endsWith('.yml');
+                
+                if (isYamlSource) {
+                    // 使用YAML解析
+                    const yamlText = await response.text();
+                    this.timelineData = this.parseYAMLData(yamlText);
+                } else {
+                    // 使用JSON解析（向后兼容）
+                    this.timelineData = await response.json();
+                }
+                
                 this.timelineData = Array.isArray(this.timelineData) ? this.timelineData : [];
                 this.allTimelineData = this.timelineData.map((d, i) => ({ ...d, __idx: i }));
                 this.timelineData = this.allTimelineData;
@@ -54,10 +68,70 @@ class TimelineCore {
                 return this.timelineData;
             } catch (error) {
                 console.warn(`❌ 数据源 ${i + 1} 加载失败:`, error.message);
+                this.handleDataLoadError(error, i + 1);
                 if (i === dataSources.length - 1) {
                     throw new Error('所有数据源都无法访问');
                 }
             }
+        }
+    }
+    
+    parseYAMLData(yamlText) {
+        try {
+            // 使用js-yaml库解析YAML数据
+            const data = jsyaml.load(yamlText, {
+                onWarning: (warning) => {
+                    console.warn('YAML解析警告:', warning.message);
+                }
+            });
+            
+            // 验证解析结果
+            if (!Array.isArray(data)) {
+                throw new Error('YAML数据格式错误：根元素必须是数组');
+            }
+            
+            // 验证每个数据项的必填字段
+            data.forEach((item, index) => {
+                if (!item.date) {
+                    throw new Error(`YAML数据验证失败：第 ${index + 1} 项缺少必填字段 'date'`);
+                }
+                if (!item.title) {
+                    throw new Error(`YAML数据验证失败：第 ${index + 1} 项缺少必填字段 'title'`);
+                }
+                if (!item.text) {
+                    throw new Error(`YAML数据验证失败：第 ${index + 1} 项缺少必填字段 'text'`);
+                }
+            });
+            
+            console.log('✅ YAML数据解析和验证成功');
+            return data;
+            
+        } catch (error) {
+            if (error.name === 'YAMLException') {
+                // YAML语法错误
+                const line = error.mark ? error.mark.line + 1 : '未知';
+                const column = error.mark ? error.mark.column + 1 : '未知';
+                throw new Error(`YAML语法错误 (第${line}行，第${column}列): ${error.reason}`);
+            } else {
+                // 其他错误
+                throw error;
+            }
+        }
+    }
+    
+    handleDataLoadError(error, sourceIndex) {
+        // 记录详细的错误信息
+        const errorInfo = {
+            source: sourceIndex,
+            message: error.message,
+            timestamp: new Date().toISOString()
+        };
+        
+        console.error('数据加载错误详情:', errorInfo);
+        
+        // 如果是YAML相关错误，提供更友好的提示
+        if (error.message.includes('YAML')) {
+            console.error('💡 YAML格式提示: 请检查文件格式是否正确，注意缩进和语法');
         }
     }
     
@@ -971,16 +1045,311 @@ class TimelineCore {
         });
     }
     
-    // 错误处理
-    handleError(error) {
+    // 显示加载状态指示器
+    showLoadingIndicator() {
         const timelineContainer = document.getElementById('timeline');
-        if (timelineContainer && this.config.get('errorHandling.showFallbackData')) {
-            timelineContainer.innerHTML = `
-                <div style="text-align: center; padding: 40px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; margin: 20px 0;">
-                    <h3 style="color: #721c24; margin-bottom: 15px;">❌ ${this.config.get('errorHandling.fallbackMessage')}</h3>
-                    <p style="color: #721c24; margin-bottom: 15px;">请检查网络连接或稍后重试。</p>
+        const chartContainer = document.getElementById('release-chart');
+        
+        const loadingHTML = `
+            <div class="loading-indicator" id="loading-indicator">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">正在加载时间轴数据...</div>
+            </div>
+        `;
+        
+        if (timelineContainer) {
+            timelineContainer.innerHTML = loadingHTML;
+        }
+        
+        if (chartContainer) {
+            chartContainer.innerHTML = `
+                <div class="loading-indicator">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">正在加载图表数据...</div>
                 </div>
             `;
+        }
+        
+        // 添加加载样式
+        this.addLoadingStyles();
+    }
+    
+    // 隐藏加载状态指示器
+    hideLoadingIndicator() {
+        const loadingIndicators = document.querySelectorAll('.loading-indicator');
+        loadingIndicators.forEach(indicator => {
+            indicator.remove();
+        });
+    }
+    
+    // 添加加载样式
+    addLoadingStyles() {
+        if (document.getElementById('loading-styles')) return;
+        
+        const style = document.createElement('style');
+        style.id = 'loading-styles';
+        style.textContent = `
+            .loading-indicator {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 60px 20px;
+                text-align: center;
+            }
+            
+            .loading-spinner {
+                width: 40px;
+                height: 40px;
+                border: 4px solid #e3f2fd;
+                border-top: 4px solid #5698c3;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-bottom: 16px;
+            }
+            
+            .loading-text {
+                color: #5698c3;
+                font-size: 16px;
+                font-weight: 500;
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .error-container {
+                background: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 8px;
+                padding: 24px;
+                margin: 20px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            .error-container.yaml-error {
+                background: #f8d7da;
+                border-color: #f5c6cb;
+            }
+            
+            .error-title {
+                color: #856404;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .error-container.yaml-error .error-title {
+                color: #721c24;
+            }
+            
+            .error-message {
+                color: #856404;
+                font-size: 14px;
+                line-height: 1.5;
+                margin-bottom: 16px;
+            }
+            
+            .error-container.yaml-error .error-message {
+                color: #721c24;
+            }
+            
+            .error-details {
+                background: rgba(0,0,0,0.05);
+                border-radius: 4px;
+                padding: 12px;
+                font-family: 'Courier New', monospace;
+                font-size: 13px;
+                color: #495057;
+                margin-bottom: 16px;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+            
+            .error-actions {
+                display: flex;
+                gap: 12px;
+                flex-wrap: wrap;
+            }
+            
+            .error-btn {
+                background: #5698c3;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background-color 0.2s;
+            }
+            
+            .error-btn:hover {
+                background: #4a7ba7;
+            }
+            
+            .error-btn.secondary {
+                background: #6c757d;
+            }
+            
+            .error-btn.secondary:hover {
+                background: #5a6268;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // 错误处理
+    handleError(error) {
+        this.hideLoadingIndicator();
+        
+        const timelineContainer = document.getElementById('timeline');
+        if (!timelineContainer) return;
+        
+        let errorType = 'general';
+        let errorTitle = '❌ 数据加载失败';
+        let errorMessage = error.message || '未知错误';
+        let errorDetails = '';
+        let suggestions = [];
+        
+        // 分析错误类型
+        if (error.message.includes('YAML')) {
+            errorType = 'yaml';
+            errorTitle = '❌ YAML格式错误';
+            
+            if (error.message.includes('语法错误')) {
+                suggestions = [
+                    '检查YAML文件的缩进是否正确（使用空格，不要使用制表符）',
+                    '确保冒号后面有空格',
+                    '检查引号是否正确配对',
+                    '验证多行字符串的格式（使用 | 或 > 符号）'
+                ];
+            } else if (error.message.includes('验证失败')) {
+                suggestions = [
+                    '确保每个模型条目都包含必填字段：date, title, text',
+                    '检查日期格式是否为 YYYY-MM-DD',
+                    '验证所有字段的数据类型是否正确'
+                ];
+            }
+            
+            errorDetails = error.message;
+        } else if (error.message.includes('HTTP')) {
+            errorType = 'network';
+            errorTitle = '🌐 网络连接错误';
+            errorMessage = '无法加载数据文件';
+            suggestions = [
+                '检查网络连接是否正常',
+                '确认数据文件路径是否正确',
+                '稍后重试'
+            ];
+        } else if (error.message.includes('所有数据源都无法访问')) {
+            errorType = 'datasource';
+            errorTitle = '📂 数据源不可用';
+            errorMessage = '所有配置的数据源都无法访问';
+            suggestions = [
+                '检查数据文件是否存在',
+                '验证文件路径配置是否正确',
+                '确认服务器是否正常运行'
+            ];
+        }
+        
+        const containerClass = errorType === 'yaml' ? 'error-container yaml-error' : 'error-container';
+        
+        const suggestionsHTML = suggestions.length > 0 ? `
+            <div class="error-suggestions">
+                <strong>建议解决方案：</strong>
+                <ul style="margin: 8px 0 0 20px; padding: 0;">
+                    ${suggestions.map(s => `<li style="margin-bottom: 4px;">${s}</li>`).join('')}
+                </ul>
+            </div>
+        ` : '';
+        
+        const detailsHTML = errorDetails ? `
+            <div class="error-details">${errorDetails}</div>
+        ` : '';
+        
+        timelineContainer.innerHTML = `
+            <div class="${containerClass}">
+                <div class="error-title">${errorTitle}</div>
+                <div class="error-message">${errorMessage}</div>
+                ${detailsHTML}
+                ${suggestionsHTML}
+                <div class="error-actions">
+                    <button class="error-btn" onclick="window.timelineCore.retryDataLoad()">🔄 重新加载</button>
+                    <button class="error-btn secondary" onclick="window.timelineCore.showErrorDetails('${encodeURIComponent(JSON.stringify({ type: errorType, message: errorMessage, details: errorDetails, suggestions }))}')">📋 查看详情</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    // 重新加载数据
+    async retryDataLoad() {
+        try {
+            this.showLoadingIndicator();
+            await this.loadTimelineData();
+            this.hideLoadingIndicator();
+            this.setupUI();
+            console.log('✅ 数据重新加载成功');
+        } catch (error) {
+            console.error('❌ 重新加载失败:', error);
+            this.handleError(error);
+        }
+    }
+    
+    // 显示错误详情
+    showErrorDetails(encodedErrorInfo) {
+        try {
+            const errorInfo = JSON.parse(decodeURIComponent(encodedErrorInfo));
+            const details = `
+错误类型: ${errorInfo.type}
+错误信息: ${errorInfo.message}
+详细信息: ${errorInfo.details || '无'}
+时间: ${new Date().toLocaleString()}
+用户代理: ${navigator.userAgent}
+            `.trim();
+            
+            // 创建模态框显示详细信息
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; padding: 24px; border-radius: 8px; max-width: 600px; max-height: 80vh; overflow-y: auto; margin: 20px;">
+                    <h3 style="margin-top: 0; color: #721c24;">错误详情</h3>
+                    <pre style="background: #f8f9fa; padding: 16px; border-radius: 4px; font-size: 12px; white-space: pre-wrap; word-break: break-word;">${details}</pre>
+                    <div style="text-align: right; margin-top: 16px;">
+                        <button onclick="this.closest('.modal').remove()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">关闭</button>
+                        <button onclick="navigator.clipboard.writeText('${details.replace(/'/g, "\\'")}').then(() => alert('已复制到剪贴板'))" style="background: #5698c3; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-left: 8px;">复制</button>
+                    </div>
+                </div>
+            `;
+            
+            modal.className = 'modal';
+            document.body.appendChild(modal);
+            
+            // 点击背景关闭
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+            
+        } catch (e) {
+            console.error('显示错误详情失败:', e);
+            alert('无法显示错误详情');
         }
     }
 }

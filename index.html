@@ -80,15 +80,62 @@
         <!-- 时间轴内容将由 JavaScript 生成 -->
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="./assets/timeline-config.js"></script>
     <script src="./assets/timeline-core.js"></script>
     <script>
+        // 测试YAML解析库功能
+        function testYAMLLibrary() {
+            try {
+                // 测试基本YAML解析功能
+                const testYaml = `
+name: "Test Model"
+date: "2025-01-01"
+text: |
+  This is a multi-line
+  text example
+features:
+  - feature1
+  - feature2
+openSource: true
+`;
+                
+                const parsed = jsyaml.load(testYaml);
+                console.log('✅ YAML解析库加载成功');
+                console.log('📊 测试解析结果:', parsed);
+                
+                // 验证解析结果
+                if (parsed.name === "Test Model" && 
+                    parsed.date === "2025-01-01" && 
+                    parsed.text.includes("multi-line") &&
+                    Array.isArray(parsed.features) &&
+                    parsed.openSource === true) {
+                    console.log('✅ YAML解析功能验证通过');
+                    return true;
+                } else {
+                    console.error('❌ YAML解析结果验证失败');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ YAML解析库测试失败:', error);
+                return false;
+            }
+        }
+
         // 全局时间轴实例
         let timelineCore;
 
         // 初始化时间轴
         function initTimeline() {
+            // 首先测试YAML库
+            const yamlTestPassed = testYAMLLibrary();
+            
+            if (!yamlTestPassed) {
+                console.error('❌ YAML库测试失败，时间轴初始化中止');
+                return;
+            }
+
             // 创建配置
             const config = new TimelineConfig(TIMELINE_CONFIGS.standalone);
 
